@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31702.278
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalMessengerServer", "LocalMessengerServer\LocalMessengerServer.csproj", "{0C4D632F-85F7-44F6-8349-9894092204F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalMessengerClient", "LocalMessengerClient\LocalMessengerClient.csproj", "{6D5973FF-460E-4D79-9279-ECDCA50089EC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0C4D632F-85F7-44F6-8349-9894092204F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C4D632F-85F7-44F6-8349-9894092204F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C4D632F-85F7-44F6-8349-9894092204F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C4D632F-85F7-44F6-8349-9894092204F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D5973FF-460E-4D79-9279-ECDCA50089EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D5973FF-460E-4D79-9279-ECDCA50089EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D5973FF-460E-4D79-9279-ECDCA50089EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D5973FF-460E-4D79-9279-ECDCA50089EC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1EEE4FEC-C481-47C3-B601-FA3779EF4269}
+	EndGlobalSection
+EndGlobal
