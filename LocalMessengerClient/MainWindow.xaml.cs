@@ -45,3 +45,5 @@ namespace LocalMessengerClient
         }
     }
 }
+
+//http://csharp.net-informations.com/communications/csharp-multi-threaded-client-socket.htm
