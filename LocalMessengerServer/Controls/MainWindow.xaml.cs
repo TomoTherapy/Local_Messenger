@@ -36,12 +36,17 @@ namespace LocalMessengerServer
 
         private void Warning_button_Click(object sender, RoutedEventArgs e)
         {
-
+            
         }
 
         private void Block_button_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            view.Window_Closing();
         }
     }
 }

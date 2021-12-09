@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LocalMessengerServer.Xml;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -13,5 +14,11 @@ namespace LocalMessengerServer
     /// </summary>
     public partial class App : Application
     {
+        public XmlParser m_XmlParser;
+
+        public App()
+        {
+            m_XmlParser = new XmlParser();
+        }
     }
 }
