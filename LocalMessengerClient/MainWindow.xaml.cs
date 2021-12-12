@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LocalMessengerClient.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -21,29 +22,28 @@ namespace LocalMessengerClient
     /// </summary>
     public partial class MainWindow : Window
     {
+        MainWindow_ViewModel view;
+
         public MainWindow()
         {
             InitializeComponent();
-            AAA();
+            view = new MainWindow_ViewModel();
+            DataContext = view;
         }
 
-        private TcpClient clientSocket = new TcpClient();
-        private NetworkStream serverStream;
-
-        public void AAA()
+        private void Connect_button_Click(object sender, RoutedEventArgs e)
         {
-            clientSocket.Connect("127.0.0.1", 8001);
-            serverStream = clientSocket.GetStream();
-            byte[] outStream = Encoding.ASCII.GetBytes("Message from Client$");
-            serverStream.Write(outStream, 0, outStream.Length);
-            serverStream.Flush();
+            view.Connect_button_Click();
+        }
 
-            byte[] inStream = new byte[10025];
-            serverStream.Read(inStream, 0, (int)clientSocket.ReceiveBufferSize);
-            string returndata = System.Text.Encoding.ASCII.GetString(inStream);
-            MessageBox.Show("Data from Server : " + returndata);
+        private void SignIn_button_Click(object sender, RoutedEventArgs e)
+        {
+            view.SignIn_button_Click();
+        }
+
+        private void SignOut_button_Click(object sender, RoutedEventArgs e)
+        {
+            view.SignOut_button_Click();
         }
     }
 }
-
-//http://csharp.net-informations.com/communications/csharp-multi-threaded-client-socket.htm

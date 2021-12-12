@@ -3,10 +3,30 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:LocalMessengerClient"
+        xmlns:local="clr-namespace:LocalMessengerClient.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="548.353" Width="477.994">
+    <Window.Resources>
+        <local:ClientOpenBoolToColor x:Key="ClientOpenBoolToColor"/>
+        <local:ClientConnectionBoolToString x:Key="ClientConnectionBoolToString"/>
+        <local:ClientOpenBoolToOpacity x:Key="ClientOpenBoolToOpacity"/>
+    </Window.Resources>
     <Grid>
-        
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="85,50,0,0" TextWrapping="Wrap" Text="{Binding ID}" VerticalAlignment="Top" Width="120"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="85,78,0,0" TextWrapping="Wrap" Text="{Binding Password}" VerticalAlignment="Top" Width="120"/>
+        <Button x:Name="SignIn_button" Content="Sign in" HorizontalAlignment="Left" Margin="237,50,0,0" VerticalAlignment="Top" Width="75" Click="SignIn_button_Click"/>
+        <DataGrid HorizontalAlignment="Left" Height="326" Margin="29,147,0,0" VerticalAlignment="Top" Width="303"/>
+        <Button x:Name="SignOut_button" Content="Sign out" HorizontalAlignment="Left" Margin="237,78,0,0" VerticalAlignment="Top" Width="75" Click="SignOut_button_Click"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="29,10,0,0" TextWrapping="Wrap" Text="{Binding ClientIP}" VerticalAlignment="Top" Width="120"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="166,10,0,0" TextWrapping="Wrap" Text="{Binding ClientPort}" VerticalAlignment="Top" Width="67"/>
+        <Button x:Name="Connect_button" Content="Connect" HorizontalAlignment="Left" Margin="257,11,0,0" VerticalAlignment="Top" Width="75" Click="Connect_button_Click"/>
+        <Rectangle Fill="{Binding ClientConnection, Converter={StaticResource ResourceKey=ClientOpenBoolToColor}}" HorizontalAlignment="Left" Height="22" Margin="361,11,0,0" Stroke="Black" VerticalAlignment="Top" Width="22"/>
+        <TextBlock HorizontalAlignment="Left" Margin="29,50,0,0" TextWrapping="Wrap" Text="ID" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="29,82,0,0" TextWrapping="Wrap" Text="Password" VerticalAlignment="Top"/>
+        <TextBlock x:Name="textBlock3" Margin="260,28,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="22" Padding="6,6,0,0" Width="200" HorizontalAlignment="Left"
+                               Text="{Binding Path=ClientConnection, Converter={StaticResource ClientConnectionBoolToString}}"
+                               Opacity="{Binding Path=IsClientOpened, Converter={StaticResource ClientOpenBoolToOpacity}}"
+                               FontFamily="Segoe UI"/>
+        <TextBlock HorizontalAlignment="Left" Margin="33,126,0,0" TextWrapping="Wrap" Text="User List" VerticalAlignment="Top"/>
     </Grid>
 </Window>

@@ -1,0 +1,47 @@
+﻿<Window x:Class="LocalMessengerServer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LocalMessengerServer.ViewModels"
+        mc:Ignorable="d"
+        Title="Local Messenger Server" Height="427" Width="1015.333" Closing="Window_Closing">
+    <Window.Resources>
+        <local:ServerOpenBoolToColor x:Key="ServerOpenBoolToColor"/>
+    </Window.Resources>
+    <Grid>
+        <ComboBox HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="120" ItemsSource="{Binding ServerItems}" SelectedIndex="0" SelectedItem="{Binding ServerIP}"/>
+        <TextBox x:Name="textBox_Copy" HorizontalAlignment="Left" Height="23" Margin="135,9,0,0" TextWrapping="Wrap" Text="{Binding ServerPort}" VerticalAlignment="Top" Width="120" VerticalContentAlignment="Center"/>
+        <Button x:Name="ServerStart_button" Content="서버구동" HorizontalAlignment="Left" Margin="260,10,0,0" VerticalAlignment="Top" Width="75" Click="ServerStart_button_Click" Height="22"/>
+        <DataGrid x:Name="Users_dataGrid" HorizontalAlignment="Left" Margin="10,65,0,10" Width="211" AutoGenerateColumns="False" IsReadOnly="True"
+                  ItemsSource="{Binding ConnectionListDisplay}" SelectedItem="{Binding SelectedConnection}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="UID" Binding="{Binding UID}" Width="30" />
+                <DataGridTextColumn Header="ID" Binding="{Binding ID}" Width="*" />
+                <!--<DataGridTemplateColumn Header="ID" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBox Text="{Binding ID}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>-->
+                <DataGridCheckBoxColumn Header="Sign in" Binding="{Binding SignIned}" Width="50"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <DataGrid x:Name="dataGrid1" HorizontalAlignment="Left" Margin="226,65,0,10" Width="238" AutoGenerateColumns="False" IsReadOnly="True"/>
+        <Rectangle Fill="{Binding IsServerOpened, Converter={StaticResource ResourceKey=ServerOpenBoolToColor}}" HorizontalAlignment="Left" Height="22" Margin="340,10,0,0" Stroke="Black" VerticalAlignment="Top" Width="22"/>
+        <Border BorderBrush="Black" BorderThickness="1" Margin="469,65,10,10">
+            <ScrollViewer Margin="0">
+                <TextBlock TextWrapping="Wrap" Text="{Binding AllMessasges}"/>
+            </ScrollViewer>
+        </Border>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="152,40,0,0" TextWrapping="Wrap" Text="{Binding UserCount}" VerticalAlignment="Top" Width="69"/>
+        <Button x:Name="DBWorkbench_button" Content="DB Workbench" HorizontalAlignment="Left" Margin="469,9,0,0" VerticalAlignment="Top" Width="108" Click="DBWorkbench_button_Click" Height="22"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,44,0,0" TextWrapping="Wrap" Text="Current User List" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="226,44,0,0" TextWrapping="Wrap" Text="Current Chatroom List" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="469,44,0,0" TextWrapping="Wrap" Text="Live messages" VerticalAlignment="Top"/>
+
+    </Grid>
+</Window>

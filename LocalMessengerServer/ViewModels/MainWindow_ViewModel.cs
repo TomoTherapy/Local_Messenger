@@ -1,4 +1,5 @@
-﻿using LocalMessengerServer.Devices;
+﻿using LocalMessengerServer.Controls;
+using LocalMessengerServer.Devices;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using ViewModels;
 
 namespace LocalMessengerServer.ViewModels
 {
@@ -23,15 +25,19 @@ namespace LocalMessengerServer.ViewModels
         private TcpListener m_Server;
         private TcpClient m_Client;
         private Database m_Database;
+        private DBWorkbenchWindow DBWorkbench;
 
         private Xml.XmlParser m_XmlParser;
         private Thread ServerListening;
         private string allMessasges;
+        private List<Connection> connectionListDisplay;
+        private Connection selectedConnection;
 
         //public ObservableCollection<User> UserList { get; set; }
         public List<Connection> ConnectionList { get; set; }
+        public List<Connection> ConnectionListDisplay { get => connectionListDisplay; set { connectionListDisplay = value; RaisePropertyChanged(); RaisePropertyChanged(nameof(UserCount)); } }
+        public Connection SelectedConnection { get => selectedConnection; set => selectedConnection = value; }
         public List<Chat> ChatList { get; set; }
-        public ObservableCollection<Connection> ConnectionListObs { get; set; }
 
         #region Server Properties
         public string[] ServerItems { get; set; } = { "0.0.0.0", "127.0.0.1" };
@@ -43,16 +49,15 @@ namespace LocalMessengerServer.ViewModels
         public string ServerOutput { get => m_ServerOutput; set { if (m_ServerOutput != value) { m_ServerOutput = value; RaisePropertyChanged(); } } }
         public string ServerSendMsg { get => m_ServerSendMsg; set { if (m_ServerSendMsg != value) { m_ServerSendMsg = value; RaisePropertyChanged(); } } }
         public string AllMessasges { get => allMessasges; set { allMessasges = value; RaisePropertyChanged(); } }
-        public int UserCount { get => ConnectionList.Count; set { } }
+        public int UserCount { get { if (ConnectionListDisplay == null) return 0; else return ConnectionListDisplay.Count; } set { } }
         #endregion
-
 
         public MainWindow_ViewModel()
         {
-            m_Database = new Database();
-            ConnectionList = new List<Connection>();
+            m_Database = ((App)Application.Current).m_Database;
             m_XmlParser = ((App)Application.Current).m_XmlParser;
             ServerIP = ServerItems[0];
+            ConnectionList = new List<Connection>();
         }
 
         internal void Window_Closing()
@@ -63,12 +68,30 @@ namespace LocalMessengerServer.ViewModels
             }
         }
 
+        internal void Warning_button_Click()
+        {
+            m_Database.UpdateWarningPlus(SelectedConnection.ID);
+        }
+
+        internal void Block_button_Click()
+        {
+            m_Database.BanUnban(SelectedConnection.ID);
+        }
+
+        internal void DBWorkbench_button_Click()
+        {
+            if (DBWorkbench == null || DBWorkbench.IsLoaded == false)
+            {
+                DBWorkbench = new DBWorkbenchWindow();
+                DBWorkbench.Show();
+            }
+        }
+
         internal void ServerStart_button_Click()
         {
             ServerOpenClose(ServerIP);
         }
 
-        #region Server Methods
         internal void ServerOpenClose(string ip)
         {
             IsServerOpened = !IsServerOpened;
@@ -124,22 +147,11 @@ namespace LocalMessengerServer.ViewModels
             }
         }
 
-
-        private void SignIn(string id, string password)
-        {
-            if(m_Database.SignIn(id, password))//성공 true 실패 false
-            {
-                ConnectionList.Single(a => a.ID == id).SignIned = true;
-            }
-        }
-
-
         private void DataReceivedHandle(object sender, EventArgs e)
         {
             string msg = (sender as Connection).MSG;
-            int SerialNum = (sender as Connection).UID;
             int UID = (sender as Connection).UID;
-            DataLog(msg, SerialNum, UID);
+            DataLog(msg, UID);
 
             //example "CODE=SEND;MSG=JesusFuck"
             //example "CODE=SIGNIN;ID=babo;PASSWORD=1234"
@@ -149,20 +161,128 @@ namespace LocalMessengerServer.ViewModels
 
             if (dict["CODE"] == "SIGNIN")
             {
-                SignIn(dict["ID"], dict["PASSWORD"]);
-            }
-            else if (dict["CODE"] == "OPENCHAT")
-            {
-
-            }
-            else if (dict["CODE"] == "CLOSECHAT")
-            {
-
+                SignIn(UID, dict["ID"], dict["PASSWORD"]);
+                SendUserList(UID);
             }
             else if (dict["CODE"] == "SIGNOUT")
             {
-
+                SignOut(UID, dict["ID"]);
             }
+            else if (dict["CODE"] == "SIGNUP")
+            {
+                SignUp(UID, dict["ID"], dict["PASSWORD"], dict["NAME"]);
+                SignIn(UID, dict["ID"], dict["PASSWORD"]);
+                SendUserList(UID);
+            }
+            else if (dict["CODE"] == "OPENCHAT")
+            {
+                OpenChat(UID, dict["ID"], dict["TargetID"]);
+            }
+            else if (dict["CODE"] == "CLOSECHAT")
+            {
+                CloseChat(UID, dict["ID"], dict["TargetID"]);
+            }
+            else if (dict["CODE"] == "SENDUSERLIST")
+            {
+                SendUserList(UID);
+            }
+            else if (dict["CODE"] == "SENDMSG")
+            {
+                SendMSG(UID, dict["ID"], dict["TargetID"], dict["MSG"]);
+            }
+        }
+
+        private void SignIn(int uid, string id, string password)
+        {
+            if (m_Database.SignIn(id, password))//성공 true 실패 false
+            {
+                ConnectionList.Single(a => a.UID == uid).SignIned = true;
+                ConnectionList.Single(a => a.UID == uid).ID = id;
+                ConnectionListRefresh();
+
+                StreamWriteMSG(uid, "CODE=SIGNIN;CONFIRMED=1");
+            }
+            else
+            {
+                StreamWriteMSG(uid, "CODE=SIGNIN;CONFIRMED=0");
+            }
+        }
+
+        private void SignOut(int uid, string id)
+        {
+            ConnectionList.Single(a => a.UID == uid).SignIned = false;
+            ConnectionList.Single(a => a.UID == uid).ID = "";
+            StreamWriteMSG(uid, "CODE=SIGNOUT;CONFIRMED=1");
+            ConnectionListRefresh();
+        }
+
+        private void SignUp(int uid, string id, string password, string name)
+        {
+            ConnectionListRefresh();
+        }
+
+        private void OpenChat(int uid, string id, string targetId)
+        {
+            var connection = ConnectionList.Single(a => a.ID == targetId);
+            if (connection == null)
+            {
+                StreamWriteMSG(uid, "CODE=OPENCHAT;TARGETID=" + targetId + ";CONFIRMED=0");
+            }
+            else
+            {
+                StreamWriteMSG(uid, "CODE=OPENCHAT;TARGETID=" + targetId + ";CONFIRMED=1");//요청자에게 신호
+                StreamWriteMSG(ConnectionList.Single(a => a.ID == targetId).UID, "CODE=OPENCHAT;TARGETID=" + ConnectionList.Single(a => a.ID == id).ID + ";CONFIRMED=1");//받는놈한테 신호
+            }
+        }
+
+        private void CloseChat(int uid, string id, string targetId)
+        {
+            var connection = ConnectionList.Single(a => a.ID == targetId);
+            if (connection == null)
+            {
+                StreamWriteMSG(uid, "CODE=CLOSECHAT;TARGETID=" + targetId + ";CONFIRMED=1");
+            }
+            else
+            {
+                StreamWriteMSG(uid, "CODE=CLOSECHAT;TARGETID=" + targetId + ";CONFIRMED=1");//요청자에게 신호
+                StreamWriteMSG(ConnectionList.Single(a => a.ID == targetId).UID, "CODE=CLOSECHAT;TARGETID=" + ConnectionList.Single(a => a.ID == id).ID + ";CONFIRMED=1");//받는놈한테 신호
+            }
+        }
+
+        private void SendUserList(int uid)
+        {
+            StringBuilder users = new StringBuilder();
+            foreach (var connection in ConnectionList)
+            {
+                users.Append(connection.ID + ",");
+            }
+
+            StreamWriteMSG(uid, "CODE=USERLIST;USERS=" + users.ToString().Substring(0, users.ToString().Length - 1));
+        }
+
+        private void SendMSG(int uid, string id, string targetId, string msg)
+        {
+            var connection = ConnectionList.Single(a => a.ID == targetId);
+            if (connection == null)
+            {
+                //연결체크 후 끊겼으면 각각클라이언트에 메세지 띄우고 창닫게 하기
+                StreamWriteMSG(uid, "");//요청자에게 신호
+                StreamWriteMSG(ConnectionList.Single(a => a.ID == targetId).UID, "");//받는놈한테 신호
+            }
+            else
+            {
+                StreamWriteMSG(uid, "");//요청자에게 신호
+                StreamWriteMSG(ConnectionList.Single(a => a.ID == targetId).UID, "");//받는놈한테 신호
+            }
+        }
+
+        private void StreamWriteMSG(int uid, string msg)
+        {
+            AllMessasges = AllMessasges + "→ [" + DateTime.Now.ToString("yyyy/MM/dd_HH:mm:ss:fff") + "] UID=" + uid + ";Msg=" + msg + "\n";
+
+            byte[] buffer = Encoding.Default.GetBytes(msg);
+
+            ConnectionList.Single(a => a.UID == uid).Stream.Write(buffer, 0, buffer.Length);
         }
 
         private void DisconnectedHandle(object sender, EventArgs e)
@@ -187,14 +307,13 @@ namespace LocalMessengerServer.ViewModels
 
         private void ConnectionListRefresh()
         {
-            
+            ConnectionListDisplay = new List<Connection>(ConnectionList);
         }
 
-        private void DataLog(string msg, int serial, int uid)
+        private void DataLog(string msg, int uid)
         {
-            AllMessasges = AllMessasges + "\n[" + DateTime.Now.ToString("yyyy/MM/dd_HH:mm:ss:fff") + "] Serial=" + serial + "/UID=" + uid + "/Msg=" + msg;
+            AllMessasges = AllMessasges + "← [" + DateTime.Now.ToString("yyyy/MM/dd_HH:mm:ss:fff") + "] UID=" + uid + ";Msg=" + msg + "\n";
         }
-        #endregion
     }
 
     public class Connection

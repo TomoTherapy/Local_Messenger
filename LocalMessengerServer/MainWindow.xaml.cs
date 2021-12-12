@@ -36,17 +36,22 @@ namespace LocalMessengerServer
 
         private void Warning_button_Click(object sender, RoutedEventArgs e)
         {
-            
+            view.Warning_button_Click();
         }
 
         private void Block_button_Click(object sender, RoutedEventArgs e)
         {
-
+            view.Block_button_Click();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             view.Window_Closing();
+        }
+
+        private void DBWorkbench_button_Click(object sender, RoutedEventArgs e)
+        {
+            view.DBWorkbench_button_Click();
         }
     }
 }

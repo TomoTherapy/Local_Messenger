@@ -13,7 +13,7 @@ namespace LocalMessengerServer.Devices
 {
     public class Database
     {
-        SQLiteX64 lite;
+        public SQLiteX64 lite;
         public string Status { get; set; }
         public DataTable DT { get; set; }
 
@@ -73,16 +73,18 @@ namespace LocalMessengerServer.Devices
             {
                 StringBuilder sb = new StringBuilder();
 
-                sb.Append("SELECT COUNT(*) AS OKNG ");
+                sb.Append("SELECT COUNT(*) ");
                 sb.Append("FROM USERS ");
                 sb.Append("WHERE ID = '" + id + "' AND PASSWORD = '" + password + "';");
 
                 lite.ExecuteDataTable(sb.ToString());
 
-                var results = from users in lite.Dt.AsEnumerable()
-                              select users.Field<int>("OKNG");
+                //var results = from users in lite.Dt.AsEnumerable()
+                //              select users.Field<int>("OKNG");
 
-                if (results.ToList()[0] == 1) return true;
+                string result = lite.Dt.DefaultView[0].Row.ItemArray[0].ToString();
+
+                if (int.Parse(result) == 1) return true;
                 else return false;
             }
             catch (Exception ex)
@@ -91,14 +93,14 @@ namespace LocalMessengerServer.Devices
             }
         }
 
-        public void UpdateWarningPlus(int uid)
+        public void UpdateWarningPlus(string id)
         {
             try
             {
                 StringBuilder sb = new StringBuilder();
                 sb.Append("UPDATE USERS ");
-                sb.Append("SET WARNING = (SELECT WARNING FROM USERS WHERE UID = " + uid.ToString() + ") + 1 ");
-                sb.Append("WHERE ID = " + uid.ToString() + ";");
+                sb.Append("SET WARNING = (SELECT WARNING FROM USERS WHERE ID = '" + id.ToString() + "') + 1 ");
+                sb.Append("WHERE ID = '" + id.ToString() + "';");
 
                 lite.ExecuteNonQuery(sb.ToString());
                 Status = lite.Status;
@@ -109,16 +111,16 @@ namespace LocalMessengerServer.Devices
             }
         }
 
-        public void UpdateWarningMinus(int uid)
+        public void UpdateWarningMinus(string id)
         {
             try
             {
                 StringBuilder sb = new StringBuilder();
                 sb.Append("UPDATE USERS ");
-                sb.Append("SET WARNING = CASE WHEN(SELECT WARNING FROM USERS WHERE UID = " + uid.ToString() + ") ");
-                sb.Append("IS NOT 0 THEN(SELECT WARNING FROM USERS WHERE UID = " + uid.ToString() + ") - 1 ");
+                sb.Append("SET WARNING = CASE WHEN(SELECT WARNING FROM USERS WHERE ID = '" + id + "') ");
+                sb.Append("IS NOT 0 THEN(SELECT WARNING FROM USERS WHERE ID = '" + id + "') - 1 ");
                 sb.Append("ELSE 0 END ");
-                sb.Append("WHERE UID = " + uid.ToString() + ";");
+                sb.Append("WHERE ID = '" + id + "';");
 
 
                 lite.ExecuteNonQuery(sb.ToString());
@@ -130,16 +132,16 @@ namespace LocalMessengerServer.Devices
             }
         }
 
-        public void BanUnban(int uid)
+        public void BanUnban(string id)
         {
             try
             {
                 StringBuilder sb = new StringBuilder();
                 sb.Append("UPDATE USERS ");
-                sb.Append("SET ISBANNED = CASE WHEN(SELECT ISBANNED FROM USERS WHERE UID = " + uid.ToString() + ") ");
+                sb.Append("SET ISBANNED = CASE WHEN(SELECT ISBANNED FROM USERS WHERE ID = '" + id + "') ");
                 sb.Append("IS FALSE THEN TRUE ");
                 sb.Append("ELSE FALSE END ");
-                sb.Append("WHERE UID = " + uid.ToString() + ";");
+                sb.Append("WHERE UID = '" + id + "';");
 
 
                 lite.ExecuteNonQuery(sb.ToString());
