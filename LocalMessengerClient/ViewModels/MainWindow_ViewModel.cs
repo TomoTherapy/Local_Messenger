@@ -1,10 +1,12 @@
-﻿using System;
+﻿using LocalMessengerClient.Controls;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Windows;
 using ViewModels;
 
 namespace LocalMessengerClient.ViewModels
@@ -22,8 +24,8 @@ namespace LocalMessengerClient.ViewModels
         private string allMessasges;
         private string iD;
         private string password;
-
-        public event EventHandler DataReceived;
+        private bool isSignedIn;
+        private List<string> userList;
 
         public bool IsClientOpened { get => isClientOpened; set { isClientOpened = value; RaisePropertyChanged(); } }
         public bool ClientConnection { get => clientConnection; set { clientConnection = value; RaisePropertyChanged(); } }
@@ -33,31 +35,21 @@ namespace LocalMessengerClient.ViewModels
         public string AllMessasges { get => allMessasges; set { allMessasges = value; RaisePropertyChanged(); } }
         public string ID { get => iD; set { iD = value; RaisePropertyChanged(); } }
         public string Password { get => password; set { password = value; RaisePropertyChanged(); } }
-
-        public byte[] Bytes { get; set; } = new byte[256];
+        public bool IsSignedIn { get => isSignedIn; set { isSignedIn = value; RaisePropertyChanged(); } }
+        public List<string> UserList { get => userList; set { userList = value; RaisePropertyChanged(); } }
         public string MSG { get; set; } = null;
 
         public MainWindow_ViewModel()
         {
-            DataReceived += new EventHandler(DataReceivedHandle);
-
             ClientIP = "127.0.0.1";
             ClientPort = 5000;
+            IsSignedIn = false;
+            UserList = new List<string>();
         }
 
-        internal void Connect_button_Click()
+        internal void Window_Closing()
         {
-            ClientOpenClose();
-        }
-
-        internal void SignIn_button_Click()
-        {
-
-        }
-
-        internal void SignOut_button_Click()
-        {
-
+            ClientClose();
         }
 
         internal void ClientOpenClose()
@@ -88,17 +80,15 @@ namespace LocalMessengerClient.ViewModels
                                 int len = 0;
                                 while ((len = m_Stream.Read(buffer, 0, buffer.Length)) != 0)
                                 {
-                                    MSG = ReadByteToString(Bytes, len);
-
-                                    EventHandler handler = DataReceived;
-                                    if (null != handler) handler(this, EventArgs.Empty);
+                                    MSG = ReadByteToString(buffer, len);
+                                    DataReceivedHandle(MSG);
                                 }
 
                                 Thread.Sleep(50);
                             }
-                            catch (SocketException) { }
-                            catch (IOException) { }
-                            catch (ThreadAbortException) { }
+                            catch (SocketException) { IsSignedIn = false; }
+                            catch (IOException) { IsSignedIn = false; }
+                            catch (ThreadAbortException) { IsSignedIn = false; }
                             catch (Exception ex)
                             {
                                 ClientOutput += ex.Message + "\n";
@@ -117,11 +107,13 @@ namespace LocalMessengerClient.ViewModels
             else
             {
                 ClientClose();
+                IsSignedIn = false;
             }
         }
 
         internal void ClientClose()
         {
+            IsSignedIn = false;
             IsClientOpened = false;
             ClientConnection = false;
             if (m_Stream != null) m_Stream.Close();
@@ -131,12 +123,50 @@ namespace LocalMessengerClient.ViewModels
 
         private string ReadByteToString(byte[] data, int len)
         {
-            return Encoding.Default.GetString(data, 0, len);
+            try
+            {
+                return Encoding.Default.GetString(data, 0, len);
+            }
+            catch
+            {
+                return "";
+            }
         }
 
-        private void DataReceivedHandle(object sender, EventArgs e)
+        private void StreamWrite(string msg)
         {
-            string msg = (sender as MainWindow_ViewModel).MSG;
+            if (m_Stream == null || !m_Stream.CanWrite) return;
+            byte[] buffer = Encoding.Default.GetBytes(msg);
+            m_Stream.Write(buffer, 0, buffer.Length);
+        }
+
+        internal void Connect_button_Click()
+        {
+            ClientOpenClose();
+        }
+
+        internal void SignIn_button_Click()
+        {
+            StreamWrite("CODE=SIGNIN;ID=" + ID + ";PASSWORD=" + Password);
+        }
+
+        internal void SignOut_button_Click()
+        {
+            StreamWrite("CODE=SIGNOUT;ID=" + ID);
+        }
+
+        internal void RefreshUserList_button_Click()
+        {
+            StreamWrite("CODE=SENDUSERLIST");
+        }
+
+        internal void DataGridCell_MouseDoubleClick(string id)
+        {
+            StreamWrite("CODE=OPENCHAT;ID=" + ID + ";TARGETID=" + id);
+        }
+
+        private void DataReceivedHandle(string msg)
+        {
             DataLog(msg);
 
             //example "CODE=SEND;MSG=JesusFuck"
@@ -158,7 +188,7 @@ namespace LocalMessengerClient.ViewModels
             }
             else if (dict["CODE"] == "OPENCHAT")
             {
-                OpenChat(dict["CONFIRMED"]);
+                OpenChat(dict["CONFIRMED"], dict["TARGETID"]);
             }
             else if (dict["CODE"] == "CLOSECHAT")
             {
@@ -172,16 +202,25 @@ namespace LocalMessengerClient.ViewModels
             {
                 ReceiveMSG(dict["FROMID"], dict["MSG"]);
             }
+            else if (dict["CODE"] == "USERLIST")
+            {
+                ReceiveUserList(dict["USERS"]);
+            }
         }
 
         private void SignIn(string confirmed)
         {
-
+            if (confirmed == "1")
+            {
+                IsSignedIn = true;
+                Password = "";
+            }
+            else IsSignedIn = false;
         }
 
         private void SignOut(string confirmed)
         {
-
+            if (confirmed.Equals("1")) IsSignedIn = false;
         }
 
         private void SignUp(string confirmed)
@@ -189,9 +228,17 @@ namespace LocalMessengerClient.ViewModels
 
         }
 
-        private void OpenChat(string confirmed)
+        private void OpenChat(string confirmed, string targetId)
         {
+            if (confirmed.Equals("1"))
+            {
+                //UI thread
 
+            }
+            else
+            {
+                MessageBox.Show("Connection Failed!");
+            }
         }
 
         private void CloseChat(string confirmed)
@@ -209,9 +256,17 @@ namespace LocalMessengerClient.ViewModels
 
         }
 
+        private void ReceiveUserList(string users)
+        {
+            List<string> userList = users.Split(',').ToList();
+            userList.Remove(ID);
+            UserList = new List<string>(userList);
+        }
+
         private void DataLog(string msg)
         {
             AllMessasges = AllMessasges + "← [" + DateTime.Now.ToString("yyyy/MM/dd_HH:mm:ss:fff") + "] Msg=" + msg + "\n";
         }
+
     }
 }

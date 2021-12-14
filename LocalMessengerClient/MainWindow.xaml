@@ -5,18 +5,28 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LocalMessengerClient.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" Height="548.353" Width="477.994">
+        Title="MainWindow" Height="548.353" Width="477.994" Closing="Window_Closing">
     <Window.Resources>
         <local:ClientOpenBoolToColor x:Key="ClientOpenBoolToColor"/>
         <local:ClientConnectionBoolToString x:Key="ClientConnectionBoolToString"/>
         <local:ClientOpenBoolToOpacity x:Key="ClientOpenBoolToOpacity"/>
+        <local:BoolReverseConverter x:Key="BoolReverseConverter"/>
     </Window.Resources>
     <Grid>
-        <TextBox HorizontalAlignment="Left" Height="23" Margin="85,50,0,0" TextWrapping="Wrap" Text="{Binding ID}" VerticalAlignment="Top" Width="120"/>
-        <TextBox HorizontalAlignment="Left" Height="23" Margin="85,78,0,0" TextWrapping="Wrap" Text="{Binding Password}" VerticalAlignment="Top" Width="120"/>
-        <Button x:Name="SignIn_button" Content="Sign in" HorizontalAlignment="Left" Margin="237,50,0,0" VerticalAlignment="Top" Width="75" Click="SignIn_button_Click"/>
-        <DataGrid HorizontalAlignment="Left" Height="326" Margin="29,147,0,0" VerticalAlignment="Top" Width="303"/>
-        <Button x:Name="SignOut_button" Content="Sign out" HorizontalAlignment="Left" Margin="237,78,0,0" VerticalAlignment="Top" Width="75" Click="SignOut_button_Click"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="85,50,0,0" TextWrapping="Wrap" Text="{Binding ID}" VerticalAlignment="Top" Width="120" IsEnabled="{Binding IsSignedIn, Converter={StaticResource BoolReverseConverter}}"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="85,78,0,0" TextWrapping="Wrap" Text="{Binding Password}" VerticalAlignment="Top" Width="120"  IsEnabled="{Binding IsSignedIn, Converter={StaticResource BoolReverseConverter}}"/>
+        <Button x:Name="SignIn_button" Content="Sign in" HorizontalAlignment="Left" Margin="237,50,0,0" VerticalAlignment="Top" Width="75" Click="SignIn_button_Click" IsEnabled="{Binding IsSignedIn, Converter={StaticResource BoolReverseConverter}}"/>
+        <DataGrid HorizontalAlignment="Left" Height="326" Margin="29,147,0,0" VerticalAlignment="Top" Width="262" ItemsSource="{Binding UserList}" AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding}" Header="ID" Width="*"/>
+            </DataGrid.Columns>
+            <DataGrid.Resources>
+                <Style TargetType="{x:Type DataGridCell}">
+                    <EventSetter Event="MouseDoubleClick" Handler="DataGridCell_MouseDoubleClick"/>
+                </Style>
+            </DataGrid.Resources>
+        </DataGrid>
+        <Button x:Name="SignOut_button" Content="Sign out" HorizontalAlignment="Left" Margin="237,78,0,0" VerticalAlignment="Top" Width="75" Click="SignOut_button_Click" IsEnabled="{Binding IsSignedIn}"/>
         <TextBox HorizontalAlignment="Left" Height="23" Margin="29,10,0,0" TextWrapping="Wrap" Text="{Binding ClientIP}" VerticalAlignment="Top" Width="120"/>
         <TextBox HorizontalAlignment="Left" Height="23" Margin="166,10,0,0" TextWrapping="Wrap" Text="{Binding ClientPort}" VerticalAlignment="Top" Width="67"/>
         <Button x:Name="Connect_button" Content="Connect" HorizontalAlignment="Left" Margin="257,11,0,0" VerticalAlignment="Top" Width="75" Click="Connect_button_Click"/>
@@ -28,5 +38,6 @@
                                Opacity="{Binding Path=IsClientOpened, Converter={StaticResource ClientOpenBoolToOpacity}}"
                                FontFamily="Segoe UI"/>
         <TextBlock HorizontalAlignment="Left" Margin="33,126,0,0" TextWrapping="Wrap" Text="User List" VerticalAlignment="Top"/>
+        <Button x:Name="RefreshUserList_button" Content="Refresh" HorizontalAlignment="Left" Margin="312,233,0,0" VerticalAlignment="Top" Width="75" Click="RefreshUserList_button_Click"/>
     </Grid>
 </Window>

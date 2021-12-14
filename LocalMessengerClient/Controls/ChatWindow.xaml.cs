@@ -19,7 +19,7 @@ namespace LocalMessengerClient.Controls
     /// </summary>
     public partial class ChatWindow : Window
     {
-        public ChatWindow()
+        public ChatWindow(string targetId)
         {
             InitializeComponent();
         }

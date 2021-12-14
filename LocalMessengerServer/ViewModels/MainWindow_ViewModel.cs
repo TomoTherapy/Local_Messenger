@@ -62,10 +62,7 @@ namespace LocalMessengerServer.ViewModels
 
         internal void Window_Closing()
         {
-            foreach (var connection in ConnectionList)
-            {
-                connection.KillCode();
-            }
+            ServerClose();
         }
 
         internal void Warning_button_Click()
@@ -121,6 +118,7 @@ namespace LocalMessengerServer.ViewModels
 
                                 ConnectionList.Last().StreamThread = new Thread(new ThreadStart(ConnectionList.Last().ConnectionThreadMethod));
                                 ConnectionList.Last().StreamThread.Start();
+                                DataLog("Connection Established", uid);
                                 ConnectionListRefresh();
                                 uid++;
                             }
@@ -162,7 +160,7 @@ namespace LocalMessengerServer.ViewModels
             if (dict["CODE"] == "SIGNIN")
             {
                 SignIn(UID, dict["ID"], dict["PASSWORD"]);
-                SendUserList(UID);
+                SendUserList();
             }
             else if (dict["CODE"] == "SIGNOUT")
             {
@@ -172,23 +170,23 @@ namespace LocalMessengerServer.ViewModels
             {
                 SignUp(UID, dict["ID"], dict["PASSWORD"], dict["NAME"]);
                 SignIn(UID, dict["ID"], dict["PASSWORD"]);
-                SendUserList(UID);
+                SendUserList();
             }
             else if (dict["CODE"] == "OPENCHAT")
             {
-                OpenChat(UID, dict["ID"], dict["TargetID"]);
+                OpenChat(UID, dict["ID"], dict["TARGETID"]);
             }
             else if (dict["CODE"] == "CLOSECHAT")
             {
-                CloseChat(UID, dict["ID"], dict["TargetID"]);
+                CloseChat(UID, dict["ID"], dict["TARGETID"]);
             }
             else if (dict["CODE"] == "SENDUSERLIST")
             {
-                SendUserList(UID);
+                SendUserList();
             }
             else if (dict["CODE"] == "SENDMSG")
             {
-                SendMSG(UID, dict["ID"], dict["TargetID"], dict["MSG"]);
+                SendMSG(UID, dict["ID"], dict["TARGETID"], dict["MSG"]);
             }
         }
 
@@ -196,7 +194,7 @@ namespace LocalMessengerServer.ViewModels
         {
             if (m_Database.SignIn(id, password))//성공 true 실패 false
             {
-                ConnectionList.Single(a => a.UID == uid).SignIned = true;
+                ConnectionList.Single(a => a.UID == uid).IsSignedIn = true;
                 ConnectionList.Single(a => a.UID == uid).ID = id;
                 ConnectionListRefresh();
 
@@ -210,7 +208,7 @@ namespace LocalMessengerServer.ViewModels
 
         private void SignOut(int uid, string id)
         {
-            ConnectionList.Single(a => a.UID == uid).SignIned = false;
+            ConnectionList.Single(a => a.UID == uid).IsSignedIn = false;
             ConnectionList.Single(a => a.UID == uid).ID = "";
             StreamWriteMSG(uid, "CODE=SIGNOUT;CONFIRMED=1");
             ConnectionListRefresh();
@@ -223,15 +221,15 @@ namespace LocalMessengerServer.ViewModels
 
         private void OpenChat(int uid, string id, string targetId)
         {
-            var connection = ConnectionList.Single(a => a.ID == targetId);
-            if (connection == null)
-            {
-                StreamWriteMSG(uid, "CODE=OPENCHAT;TARGETID=" + targetId + ";CONFIRMED=0");
-            }
-            else
+            var connection = ConnectionList.Single(a => a.ID == targetId).IsSignedIn;
+            if (connection)
             {
                 StreamWriteMSG(uid, "CODE=OPENCHAT;TARGETID=" + targetId + ";CONFIRMED=1");//요청자에게 신호
                 StreamWriteMSG(ConnectionList.Single(a => a.ID == targetId).UID, "CODE=OPENCHAT;TARGETID=" + ConnectionList.Single(a => a.ID == id).ID + ";CONFIRMED=1");//받는놈한테 신호
+            }
+            else
+            {
+                StreamWriteMSG(uid, "CODE=OPENCHAT;TARGETID=" + targetId + ";CONFIRMED=0");
             }
         }
 
@@ -249,15 +247,22 @@ namespace LocalMessengerServer.ViewModels
             }
         }
 
-        private void SendUserList(int uid)
+        private void SendUserList()
         {
             StringBuilder users = new StringBuilder();
             foreach (var connection in ConnectionList)
             {
-                users.Append(connection.ID + ",");
+                if (connection.IsSignedIn)
+                    users.Append(connection.ID + ",");
             }
 
-            StreamWriteMSG(uid, "CODE=USERLIST;USERS=" + users.ToString().Substring(0, users.ToString().Length - 1));
+            foreach (var connection in ConnectionList)
+            {
+                if (connection.IsSignedIn)
+                {
+                    StreamWriteMSG(connection.UID, "CODE=USERLIST;USERS=" + users.ToString().Substring(0, users.ToString().Length - 1));
+                }
+            }
         }
 
         private void SendMSG(int uid, string id, string targetId, string msg)
@@ -289,6 +294,7 @@ namespace LocalMessengerServer.ViewModels
         {
             int uid = (sender as Connection).UID;
             ConnectionList.Remove(ConnectionList.Single(a => a.UID == uid));
+            DataLog("Connection lost", uid);
             ConnectionListRefresh();
         }
 
@@ -301,6 +307,7 @@ namespace LocalMessengerServer.ViewModels
 
             IsServerOpened = false;
             ServerConnection = false;
+            if (m_Client != null) m_Client.Close();
             if (m_Server != null) m_Server.Stop();
             if (ServerListening != null && ServerListening.IsAlive) ServerListening.Join();
         }
@@ -320,7 +327,7 @@ namespace LocalMessengerServer.ViewModels
     {
         public int UID { get; set; }
         public string ID { get; set; }
-        public bool SignIned { get; set; }
+        public bool IsSignedIn { get; set; }
         public TcpClient Client { get; set; }
         public NetworkStream Stream { get; set; }
         public Thread StreamThread { get; set; }
@@ -343,9 +350,13 @@ namespace LocalMessengerServer.ViewModels
                     if (null != handler1) handler1(this, EventArgs.Empty);
                 }
             }
+            catch (Exception ex)
+            {
+
+            }
             finally
             {
-                SignIned = false;
+                IsSignedIn = false;
                 Stream.Close();
                 Client.Close();
 
@@ -361,7 +372,7 @@ namespace LocalMessengerServer.ViewModels
 
         public void KillCode()
         {
-            SignIned = false;
+            IsSignedIn = false;
             if (Stream != null) Stream.Close();
             if (Client != null) Client.Close();
         }

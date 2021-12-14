@@ -27,13 +27,13 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>-->
-                <DataGridCheckBoxColumn Header="Sign in" Binding="{Binding SignIned}" Width="50"/>
+                <DataGridCheckBoxColumn Header="Sign in" Binding="{Binding IsSignedIn}" Width="50"/>
             </DataGrid.Columns>
         </DataGrid>
         <DataGrid x:Name="dataGrid1" HorizontalAlignment="Left" Margin="226,65,0,10" Width="238" AutoGenerateColumns="False" IsReadOnly="True"/>
         <Rectangle Fill="{Binding IsServerOpened, Converter={StaticResource ResourceKey=ServerOpenBoolToColor}}" HorizontalAlignment="Left" Height="22" Margin="340,10,0,0" Stroke="Black" VerticalAlignment="Top" Width="22"/>
-        <Border BorderBrush="Black" BorderThickness="1" Margin="469,65,10,10">
-            <ScrollViewer Margin="0">
+        <Border BorderBrush="#FFBBBBBB" BorderThickness="1" Margin="469,65,10,10">
+            <ScrollViewer Margin="0" ScrollChanged="ScrollViewer_ScrollChanged">
                 <TextBlock TextWrapping="Wrap" Text="{Binding AllMessasges}"/>
             </ScrollViewer>
         </Border>
