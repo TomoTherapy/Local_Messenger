@@ -168,9 +168,9 @@ namespace LocalMessengerServer.ViewModels
             }
             else if (dict["CODE"] == "SIGNUP")
             {
-                SignUp(UID, dict["ID"], dict["PASSWORD"], dict["NAME"]);
-                SignIn(UID, dict["ID"], dict["PASSWORD"]);
-                SendUserList();
+                SignUp(UID, dict["ID"], dict["PASSWORD"]);
+                //SignIn(UID, dict["ID"], dict["PASSWORD"]);
+                //SendUserList();
             }
             else if (dict["CODE"] == "OPENCHAT")
             {
@@ -214,8 +214,28 @@ namespace LocalMessengerServer.ViewModels
             ConnectionListRefresh();
         }
 
-        private void SignUp(int uid, string id, string password, string name)
+        private void SignUp(int uid, string id, string password)
         {
+            try
+            {
+                //DB 조회로 중복확인.
+                if (m_Database.CheckIDDuplication(id))
+                {
+                    //있으면 confirm 0
+                    StreamWriteMSG(uid, "CODE=SIGNUP;CONFIRMED=0;REASON=DUPLICATION");
+                }
+                else
+                {
+                    //없으면 insert, confirm 1
+                    m_Database.SignUp(id, password);
+                    StreamWriteMSG(uid, "CODE=SIGNUP;CONFIRMED=1");
+                }
+            }
+            catch(Exception ex)
+            {
+                StreamWriteMSG(uid, "CODE=SIGNUP;CONFIRMED=0;REASON=ERROR");
+            }
+
             ConnectionListRefresh();
         }
 

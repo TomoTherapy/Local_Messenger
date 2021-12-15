@@ -50,16 +50,34 @@ namespace LocalMessengerServer.Devices
             }
         }
 
-        public void SignUp(string id, string password, string name)
+        public void SignUp(string id, string password)
         {
             try
             {
                 StringBuilder sb = new StringBuilder();
                 sb.Append("INSERT INTO USERS(ID, PASSWORD, NAME) ");
-                sb.Append("VALUES('" + id + "', '" + password + "', '" + name + "');");
+                sb.Append("VALUES('" + id + "', '" + password + "', '');");
 
                 lite.ExecuteNonQuery(sb.ToString());
                 Status = lite.Status;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public bool CheckIDDuplication(string id)
+        {
+            try
+            {
+                string qeury = "SELECT COUNT(*) FROM USERS WHERE ID = '" + id + "';";
+                lite.ExecuteDataTable(qeury);
+
+                string result = lite.Dt.DefaultView[0].Row.ItemArray[0].ToString();
+
+                if (int.Parse(result) == 1) return true;
+                else return false;
             }
             catch (Exception ex)
             {

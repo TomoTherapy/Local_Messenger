@@ -62,5 +62,10 @@ namespace LocalMessengerClient
             string id = (string)dataGridCellTarget.DataContext;
             view.DataGridCell_MouseDoubleClick(id);
         }
+
+        private void SignUp_button_Click(object sender, RoutedEventArgs e)
+        {
+            view.SignUp_button_Click();
+        }
     }
 }

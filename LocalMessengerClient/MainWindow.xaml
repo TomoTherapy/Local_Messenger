@@ -39,5 +39,6 @@
                                FontFamily="Segoe UI"/>
         <TextBlock HorizontalAlignment="Left" Margin="33,126,0,0" TextWrapping="Wrap" Text="User List" VerticalAlignment="Top"/>
         <Button x:Name="RefreshUserList_button" Content="Refresh" HorizontalAlignment="Left" Margin="312,233,0,0" VerticalAlignment="Top" Width="75" Click="RefreshUserList_button_Click"/>
+        <Button x:Name="SignUp_button" Content="Sign Up" HorizontalAlignment="Left" Margin="332,173,0,0" VerticalAlignment="Top" Width="75" Click="SignUp_button_Click"/>
     </Grid>
 </Window>

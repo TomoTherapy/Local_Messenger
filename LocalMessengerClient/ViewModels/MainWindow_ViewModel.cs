@@ -47,6 +47,12 @@ namespace LocalMessengerClient.ViewModels
             UserList = new List<string>();
         }
 
+        internal void SignUp_button_Click()
+        {
+            SignUpWindow window = new SignUpWindow(this);
+            window.ShowDialog();
+        }
+
         internal void Window_Closing()
         {
             ClientClose();
@@ -223,9 +229,20 @@ namespace LocalMessengerClient.ViewModels
             if (confirmed.Equals("1")) IsSignedIn = false;
         }
 
+        private AutoResetEvent signUpResetEvent = new AutoResetEvent(false);
+        private int signUpConfirm = -1;
+        public int SignUpRequest(string id, string password)
+        {
+            StreamWrite("CODE=SIGNUP;ID=" + id + ";PASSWORD=" + password);
+            signUpResetEvent.WaitOne(1000);
+
+            return signUpConfirm;
+        }
+
         private void SignUp(string confirmed)
         {
-
+            signUpConfirm = int.Parse(confirmed);
+            signUpResetEvent.Set();
         }
 
         private void OpenChat(string confirmed, string targetId)
