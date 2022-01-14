@@ -26,6 +26,7 @@ namespace LocalMessengerClient.ViewModels
         private string password;
         private bool isSignedIn;
         private List<string> userList;
+        private ChatWindow chatWindow;
 
         public bool IsClientOpened { get => isClientOpened; set { isClientOpened = value; RaisePropertyChanged(); } }
         public bool ClientConnection { get => clientConnection; set { clientConnection = value; RaisePropertyChanged(); } }
@@ -38,6 +39,7 @@ namespace LocalMessengerClient.ViewModels
         public bool IsSignedIn { get => isSignedIn; set { isSignedIn = value; RaisePropertyChanged(); } }
         public List<string> UserList { get => userList; set { userList = value; RaisePropertyChanged(); } }
         public string MSG { get; set; } = null;
+        public string TargetID { get; set; }
 
         public MainWindow_ViewModel()
         {
@@ -56,6 +58,13 @@ namespace LocalMessengerClient.ViewModels
         internal void Window_Closing()
         {
             ClientClose();
+            Application.Current.Dispatcher.Invoke(delegate
+            {
+                if (chatWindow != null && chatWindow.IsLoaded)
+                {
+                    chatWindow.Close();
+                }
+            });
         }
 
         internal void ClientOpenClose()
@@ -249,8 +258,16 @@ namespace LocalMessengerClient.ViewModels
         {
             if (confirmed.Equals("1"))
             {
+                TargetID = targetId;
                 //UI thread
-
+                Application.Current.Dispatcher.Invoke(delegate
+                {
+                    if (chatWindow == null || !chatWindow.IsLoaded)
+                    {
+                        chatWindow = new ChatWindow(TargetID, this);
+                        chatWindow.Show();
+                    }
+                });
             }
             else
             {
@@ -260,17 +277,33 @@ namespace LocalMessengerClient.ViewModels
 
         private void CloseChat(string confirmed)
         {
-
+            Application.Current.Dispatcher.Invoke(delegate
+            {
+                if (confirmed == "1")
+                {
+                    if (chatWindow != null && chatWindow.IsLoaded) chatWindow.Close();
+                }
+            });
         }
 
-        private void SendMSG()
+        public void ChatWindowSendMSG(string targetId, string msg)
         {
+            StreamWrite("CODE=SENDMSG;TARGETID="+ targetId + ";MSG=" + msg);
+        }
 
+        public void ChatWindowClose(string targetId)
+        {
+            StreamWrite("CODE=CLOSECHAT;TARGETID=" + targetId);
         }
 
         private void ReceiveMSG(string fromId, string msg)
         {
+            Application.Current.Dispatcher.Invoke(delegate
+            {
+                if (chatWindow == null || !chatWindow.IsLoaded) return;
 
+                (chatWindow.DataContext as ChatWindow_ViewModel).ReceiveMessage(fromId, msg);
+            });
         }
 
         private void ReceiveUserList(string users)

@@ -5,12 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LocalMessengerClient.Controls"
         mc:Ignorable="d"
-        Title="ChatWindow" Height="456" Width="367">
+        Title="{Binding TargetID, Mode=TwoWay}" Height="456" Width="367" Closing="Window_Closing">
     <Grid>
-        <Border BorderBrush="Black" BorderThickness="1" Margin="10,41,10,22">
-            
+        <Border BorderBrush="#FFA8A8A8" BorderThickness="1" Margin="10,10,10,60">
+            <ScrollViewer ScrollChanged="ScrollViewer_ScrollChanged">
+                <StackPanel Name="Chat_stackPanel" Orientation="Vertical"/>
+            </ScrollViewer>
         </Border>
-        <Button Content="나가기" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="75"/>
+        <TextBox Height="45" Margin="10,0,10,10" TextWrapping="Wrap" Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Bottom" KeyDown="TextBox_KeyDown"/>
 
     </Grid>
 </Window>

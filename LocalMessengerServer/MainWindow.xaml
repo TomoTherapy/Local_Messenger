@@ -30,9 +30,9 @@
                 <DataGridCheckBoxColumn Header="Sign in" Binding="{Binding IsSignedIn}" Width="50"/>
             </DataGrid.Columns>
         </DataGrid>
-        <DataGrid x:Name="dataGrid1" HorizontalAlignment="Left" Margin="226,65,0,10" Width="238" AutoGenerateColumns="False" IsReadOnly="True"/>
+        <DataGrid x:Name="dataGrid1" HorizontalAlignment="Left" Margin="226,65,0,10" Width="238" AutoGenerateColumns="False" IsReadOnly="True" Visibility="Hidden"/>
         <Rectangle Fill="{Binding IsServerOpened, Converter={StaticResource ResourceKey=ServerOpenBoolToColor}}" HorizontalAlignment="Left" Height="22" Margin="340,10,0,0" Stroke="Black" VerticalAlignment="Top" Width="22"/>
-        <Border BorderBrush="#FFBBBBBB" BorderThickness="1" Margin="469,65,10,10">
+        <Border BorderBrush="#FFBBBBBB" BorderThickness="1" Margin="226,65,10,10">
             <ScrollViewer Margin="0" ScrollChanged="ScrollViewer_ScrollChanged">
                 <TextBlock TextWrapping="Wrap" Text="{Binding AllMessasges}"/>
             </ScrollViewer>
@@ -40,8 +40,8 @@
         <TextBox HorizontalAlignment="Left" Height="23" Margin="152,40,0,0" TextWrapping="Wrap" Text="{Binding UserCount}" VerticalAlignment="Top" Width="69"/>
         <Button x:Name="DBWorkbench_button" Content="DB Workbench" HorizontalAlignment="Left" Margin="469,9,0,0" VerticalAlignment="Top" Width="108" Click="DBWorkbench_button_Click" Height="22"/>
         <TextBlock HorizontalAlignment="Left" Margin="10,44,0,0" TextWrapping="Wrap" Text="Current User List" VerticalAlignment="Top"/>
-        <TextBlock HorizontalAlignment="Left" Margin="226,44,0,0" TextWrapping="Wrap" Text="Current Chatroom List" VerticalAlignment="Top"/>
-        <TextBlock HorizontalAlignment="Left" Margin="469,44,0,0" TextWrapping="Wrap" Text="Live messages" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="226,44,0,0" TextWrapping="Wrap" Text="Current Chatroom List" VerticalAlignment="Top" Visibility="Hidden"/>
+        <TextBlock HorizontalAlignment="Left" Margin="240,44,0,0" TextWrapping="Wrap" Text="Live messages" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>

@@ -178,7 +178,7 @@ namespace LocalMessengerServer.ViewModels
             }
             else if (dict["CODE"] == "CLOSECHAT")
             {
-                CloseChat(UID, dict["ID"], dict["TARGETID"]);
+                CloseChat(UID, dict["TARGETID"]);
             }
             else if (dict["CODE"] == "SENDUSERLIST")
             {
@@ -186,7 +186,7 @@ namespace LocalMessengerServer.ViewModels
             }
             else if (dict["CODE"] == "SENDMSG")
             {
-                SendMSG(UID, dict["ID"], dict["TARGETID"], dict["MSG"]);
+                SendMSG(UID, dict["TARGETID"], dict["MSG"]);
             }
         }
 
@@ -253,18 +253,20 @@ namespace LocalMessengerServer.ViewModels
             }
         }
 
-        private void CloseChat(int uid, string id, string targetId)
+        private void CloseChat(int uid, string targetId)
         {
-            var connection = ConnectionList.Single(a => a.ID == targetId);
-            if (connection == null)
-            {
-                StreamWriteMSG(uid, "CODE=CLOSECHAT;TARGETID=" + targetId + ";CONFIRMED=1");
-            }
-            else
-            {
-                StreamWriteMSG(uid, "CODE=CLOSECHAT;TARGETID=" + targetId + ";CONFIRMED=1");//요청자에게 신호
-                StreamWriteMSG(ConnectionList.Single(a => a.ID == targetId).UID, "CODE=CLOSECHAT;TARGETID=" + ConnectionList.Single(a => a.ID == id).ID + ";CONFIRMED=1");//받는놈한테 신호
-            }
+            StreamWriteMSG(ConnectionList.Single(a => a.ID == targetId).UID, "CODE=CLOSECHAT;CONFIRMED=1");
+
+            //var connection = ConnectionList.Single(a => a.ID == targetId);
+            //if (connection == null || !connection.IsSignedIn)
+            //{
+            //    StreamWriteMSG(uid, "CODE=CLOSECHAT;TARGETID=" + targetId + ";CONFIRMED=1");
+            //}
+            //else
+            //{
+            //    StreamWriteMSG(uid, "CODE=CLOSECHAT;TARGETID=" + targetId + ";CONFIRMED=1");//요청자에게 신호
+            //    StreamWriteMSG(ConnectionList.Single(a => a.ID == targetId).UID, "CODE=CLOSECHAT;TARGETID=" + ConnectionList.Single(a => a.ID == id).ID + ";CONFIRMED=1");//받는놈한테 신호
+            //}
         }
 
         private void SendUserList()
@@ -285,25 +287,28 @@ namespace LocalMessengerServer.ViewModels
             }
         }
 
-        private void SendMSG(int uid, string id, string targetId, string msg)
+        private void SendMSG(int uid, string targetId, string msg)
         {
             var connection = ConnectionList.Single(a => a.ID == targetId);
-            if (connection == null)
+            if (connection == null || !connection.IsSignedIn)
             {
                 //연결체크 후 끊겼으면 각각클라이언트에 메세지 띄우고 창닫게 하기
-                StreamWriteMSG(uid, "");//요청자에게 신호
-                StreamWriteMSG(ConnectionList.Single(a => a.ID == targetId).UID, "");//받는놈한테 신호
+                
+                StreamWriteMSG(uid, "CODE=WARNING;MSG=The friend is disconnected");//요청자에게 신호
+                CloseChat(uid, targetId);
+                CloseChat(uid, ConnectionList.Single(a => a.UID == uid).ID);
+                //StreamWriteMSG(ConnectionList.Single(a => a.ID == targetId).UID, "");//받는놈한테 신호
             }
             else
             {
-                StreamWriteMSG(uid, "");//요청자에게 신호
-                StreamWriteMSG(ConnectionList.Single(a => a.ID == targetId).UID, "");//받는놈한테 신호
+                //StreamWriteMSG(uid, "");//요청자에게 신호
+                StreamWriteMSG(ConnectionList.Single(a => a.ID == targetId).UID, "CODE=RECEIVEMSG;FROMID=" + ConnectionList.Single(a => a.UID == uid).ID + ";MSG=" + msg);//받는놈한테 신호
             }
         }
 
         private void StreamWriteMSG(int uid, string msg)
         {
-            AllMessasges = AllMessasges + "→ [" + DateTime.Now.ToString("yyyy/MM/dd_HH:mm:ss:fff") + "] UID=" + uid + ";Msg=" + msg + "\n";
+            AllMessasges = AllMessasges + "→ [" + DateTime.Now.ToString("yyyy/MM/dd_HH:mm:ss:fff") + "] UID : " + uid + " [" + msg + "]\n";
 
             byte[] buffer = Encoding.Default.GetBytes(msg);
 
@@ -339,7 +344,7 @@ namespace LocalMessengerServer.ViewModels
 
         private void DataLog(string msg, int uid)
         {
-            AllMessasges = AllMessasges + "← [" + DateTime.Now.ToString("yyyy/MM/dd_HH:mm:ss:fff") + "] UID=" + uid + ";Msg=" + msg + "\n";
+            AllMessasges = AllMessasges + "← [" + DateTime.Now.ToString("yyyy/MM/dd_HH:mm:ss:fff") + "] UID : " + uid + " [" + msg + "]\n";
         }
     }
 
